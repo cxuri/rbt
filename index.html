@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Robot Terminal</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+
+body {
+    font-family: 'Orbitron', sans-serif;
+    background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
+    overflow: hidden;
+}
+
+.glass {
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.pulse-ring {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(59,130,246,0.6); }
+    70% { box-shadow: 0 0 0 40px rgba(59,130,246,0); }
+    100% { box-shadow: 0 0 0 0 rgba(59,130,246,0); }
+}
+</style>
+</head>
+
+<body class="h-screen w-screen flex items-center justify-center text-white">
+
+<div id="overlay" class="absolute inset-0 flex flex-col items-center justify-center bg-black z-50">
+    <h1 class="text-5xl font-bold mb-10">AI ROBOT TERMINAL</h1>
+    <button id="startBtn" class="px-12 py-6 bg-blue-600 text-2xl rounded-3xl hover:bg-blue-700 transition active:scale-95">
+        START SYSTEM
+    </button>
+</div>
+
+<div class="w-full max-w-4xl h-[85vh] glass rounded-3xl flex flex-col items-center justify-between p-10 shadow-2xl">
+
+    <!-- Avatar -->
+    <div id="avatar" class="w-40 h-40 rounded-full bg-slate-900 border-4 border-blue-500 flex items-center justify-center text-6xl transition-all duration-300">
+        🤖
+    </div>
+
+    <!-- Display -->
+    <div class="text-center w-full">
+        <div id="userText" class="text-blue-400 italic h-6 mb-2 opacity-70"></div>
+        <div id="robotText" class="text-2xl font-light min-h-[60px]">
+            Waiting for activation...
+        </div>
+    </div>
+
+    <!-- Manual Test Input -->
+    <div class="w-full max-w-xl flex gap-3 mt-6">
+        <input 
+            id="textInput"
+            type="text"
+            placeholder="Type a message for testing..."
+            class="flex-1 px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 focus:outline-none focus:border-blue-500"
+        />
+        <button 
+            id="sendBtn"
+            class="px-6 py-3 bg-blue-600 rounded-xl hover:bg-blue-700 active:scale-95 transition">
+            Send
+        </button>
+    </div>
+
+</div>
+
+<script type="module">
+import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
+
+const API_KEY = "AIzaSyDgR6tsAYgz04aOaKVk450A6slQMx-wgu8";
+
+let genAI, model, chat;
+let isSpeaking = false;
+
+const startBtn = document.getElementById("startBtn");
+const overlay = document.getElementById("overlay");
+const robotText = document.getElementById("robotText");
+const userText = document.getElementById("userText");
+const avatar = document.getElementById("avatar");
+const textInput = document.getElementById("textInput");
+const sendBtn = document.getElementById("sendBtn");
+
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognition;
+
+if (SpeechRecognition) {
+    recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+}
+
+startBtn.addEventListener("click", async () => {
+    try {
+        genAI = new GoogleGenerativeAI(API_KEY);
+        model = genAI.getGenerativeModel({
+            model: "gemini-1.5-flash",
+            systemInstruction: "You are a futuristic kiosk robot. Reply in one short sentence."
+        });
+
+        chat = model.startChat({ history: [] });
+
+        if (recognition) {
+            await navigator.mediaDevices.getUserMedia({ audio: true });
+            recognition.start();
+        }
+
+        overlay.style.display = "none";
+        speak("System initialized. How may I assist?");
+
+    } catch (err) {
+        alert("Initialization failed.");
+        console.error(err);
+    }
+});
+
+if (recognition) {
+    recognition.onresult = (event) => {
+        let transcript = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            transcript += event.results[i][0].transcript;
+        }
+
+        userText.innerText = transcript;
+
+        if (event.results[event.results.length - 1].isFinal && !isSpeaking) {
+            processInput(transcript.trim());
+        }
+    };
+
+    recognition.onend = () => {
+        if (!isSpeaking) recognition.start();
+    };
+}
+
+// Manual Send Button
+sendBtn.addEventListener("click", () => {
+    processInput(textInput.value.trim());
+});
+
+textInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+        processInput(textInput.value.trim());
+    }
+});
+
+async function processInput(text) {
+  if (!text) return;
+
+  try {
+    const res = await fetch("/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text })
+    });
+
+    const data = await res.json();
+
+    robotText.innerText = data.reply;
+
+  } catch (err) {
+    robotText.innerText = "Server error.";
+    console.error(err);
+  }
+}
+
+function speak(text) {
+    window.speechSynthesis.cancel();
+
+    const utter = new SpeechSynthesisUtterance(text);
+
+    utter.onend = () => {
+        isSpeaking = false;
+        avatar.classList.remove("pulse-ring");
+        sendBtn.disabled = false;
+        textInput.disabled = false;
+        userText.innerText = "";
+    };
+
+    speechSynthesis.speak(utter);
+}
+</script>
+
+</body>
+</html>
