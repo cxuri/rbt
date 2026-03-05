@@ -1,52 +1,220 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Bot Tester</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI Robot Kiosk - Training Mode</title>
     <style>
-        body { background: #1a1a1a; color: white; text-align: center; font-family: sans-serif; }
-        .controls { display: grid; grid-template-columns: repeat(3, 100px); gap: 10px; justify-content: center; margin-top: 50px; }
-        button { width: 100px; height: 100px; border-radius: 15px; border: none; background: #444; color: white; font-size: 20px; }
-        button:active { background: #6366f1; }
-        .conn-btn { width: 320px; height: 50px; margin-top: 20px; background: #10b981; }
+        :root {
+            --primary: #6366f1;
+            --accent: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg: #0f172a;
+            --panel: #1e293b;
+        }
+
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: white; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        
+        /* Tabs */
+        .tabs { display: flex; background: #000; border-bottom: 1px solid #334155; flex-shrink: 0; }
+        .tab-btn { flex: 1; padding: 18px; border: none; background: none; color: #94a3b8; cursor: pointer; font-weight: bold; font-size: 1rem; }
+        .tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); background: rgba(99, 102, 241, 0.1); }
+
+        .view { display: none; flex: 1; flex-direction: column; overflow-y: auto; padding: 20px; }
+        .view.active { display: flex; }
+
+        /* Training Console */
+        .rec-indicator { display: flex; align-items: center; gap: 10px; padding: 15px; background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); border-radius: 12px; margin-bottom: 20px; color: var(--danger); font-weight: bold; visibility: hidden; }
+        .rec-indicator.active { visibility: visible; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+
+        /* Mission List */
+        .step-item { background: var(--panel); padding: 12px 18px; margin-bottom: 8px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid var(--primary); }
+        .step-meta { font-family: monospace; font-size: 0.85rem; color: #94a3b8; }
+
+        /* Controls */
+        .drive-grid { display: grid; grid-template-columns: repeat(3, 70px); gap: 15px; justify-content: center; margin: 25px 0; }
+        .btn-ctrl { height: 70px; border-radius: 15px; border: 1px solid #475569; background: var(--panel); color: white; font-size: 1.5rem; cursor: pointer; transition: 0.1s; }
+        .btn-ctrl:active, .btn-ctrl.active { background: var(--primary); transform: scale(0.95); }
+
+        .footer-nav { padding: 20px; background: rgba(0,0,0,0.5); border-top: 1px solid #334155; display: flex; gap: 12px; }
+        .btn-action { flex: 1; padding: 15px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; color: white; font-size: 1rem; }
+
+        #log { font-family: monospace; font-size: 0.8rem; background: #000; padding: 10px; border-radius: 8px; height: 100px; overflow-y: auto; color: #10b981; }
     </style>
 </head>
 <body>
-    <h2>6-Wheel Tank Control</h2>
-    <div id="status">Status: Disconnected</div>
-    
-    <div class="controls">
-        <button onclick="send('PIVOT_L,500')">Pivot L</button>
-        <button onclick="send('FORWARD,1000')">Forward</button>
-        <button onclick="send('PIVOT_R,500')">Pivot R</button>
-        <button onclick="send('LEFT,1000')">Skid L</button>
-        <button onclick="send('STOP,0')" style="background:#ef4444">STOP</button>
-        <button onclick="send('RIGHT,1000')">Skid R</button>
-        <div></div>
-        <button onclick="send('BACK,1000')">Back</button>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchView('training')">Training Mode</button>
+        <button class="tab-btn" onclick="switchView('missions')">Mission Library</button>
     </div>
 
-    <button class="conn-btn" onclick="connect()">CONNECT TO BOT</button>
+    <div id="training" class="view active">
+        <div id="recLight" class="rec-indicator">🔴 RECORDING MISSION DATA...</div>
+        
+        <div id="log">System: Ready to train. Connect BLE to start.</div>
+
+        <div class="drive-grid">
+            <div></div><button class="btn-ctrl" id="key-F">▲</button><div></div>
+            <button class="btn-ctrl" id="key-L">◀</button>
+            <button class="btn-ctrl" style="background:var(--danger)" onclick="sendBLE('S')">■</button>
+            <button class="btn-ctrl" id="key-R">▶</button>
+            <div></div><button class="btn-ctrl" id="key-B">▼</button><div></div>
+        </div>
+
+        <div style="text-align: center; margin-top: 10px;">
+            <p style="opacity: 0.6; font-size: 0.9rem;">Use On-Screen Buttons or Keyboard (WASD)</p>
+        </div>
+
+        <div style="margin-top: auto; display: flex; gap: 10px;">
+            <button class="btn-action" id="recToggle" style="background:var(--danger)" onclick="toggleTraining()">Start Recording</button>
+            <button class="btn-action" style="background:var(--primary)" onclick="connectBLE()">Connect Robot</button>
+        </div>
+    </div>
+
+    <div id="missions" class="view">
+        <h3 style="margin-bottom: 15px;">Current Path Buffer</h3>
+        <div id="stepContainer" style="flex:1;">
+            <p style="opacity: 0.4; text-align: center; margin-top: 40px;">No steps recorded yet.</p>
+        </div>
+
+        <div class="footer-nav">
+            <button class="btn-action" style="background:var(--warning)" onclick="downloadMission()">💾 Export JSON</button>
+            <button class="btn-action" style="background:var(--accent)" onclick="replayMission()">▶ Run Mission</button>
+        </div>
+    </div>
 
     <script>
-        let botChar;
-        const S_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
-        const C_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
+        // BLE Config
+        const SERVICE_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
+        const CHARACTERISTIC_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
+        let characteristic;
 
-        async function connect() {
-            const device = await navigator.bluetooth.requestDevice({
-                filters: [{ name: '6Wheel_Tank_Bot' }],
-                optionalServices: [S_UUID]
-            });
-            const server = await device.gatt.connect();
-            const service = await server.getPrimaryService(S_UUID);
-            botChar = await service.getCharacteristic(C_UUID);
-            document.getElementById('status').innerText = "Status: Connected!";
+        // Training State
+        let isRecording = false;
+        let missionData = [];
+        let startTime = 0;
+        let activeCmd = null;
+
+        // --- BLE CORE ---
+        async function connectBLE() {
+            try {
+                const device = await navigator.bluetooth.requestDevice({ filters:[{services:[SERVICE_UUID]}] });
+                const server = await device.gatt.connect();
+                const service = await server.getPrimaryService(SERVICE_UUID);
+                characteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
+                addToLog("Robot Connected ✅");
+            } catch(e) { addToLog("Error: " + e); }
         }
 
-        async function send(msg) {
-            if(!botChar) return alert("Connect first!");
-            await botChar.writeValue(new TextEncoder().encode(msg + "\n"));
+        function sendBLE(cmd) {
+            if(!characteristic) return;
+            characteristic.writeValue(new TextEncoder().encode(cmd));
         }
+
+        // --- TRAINING LOGIC ---
+        function toggleTraining() {
+            isRecording = !isRecording;
+            const btn = document.getElementById('recToggle');
+            const light = document.getElementById('recLight');
+            
+            if(isRecording) {
+                missionData = [];
+                btn.innerText = "Stop & Save";
+                light.classList.add('active');
+                addToLog("Recording started...");
+            } else {
+                btn.innerText = "Start Recording";
+                light.classList.remove('active');
+                renderSteps();
+                addToLog("Recording saved. Total steps: " + missionData.length);
+            }
+        }
+
+        function startMove(cmd) {
+            if(activeCmd === cmd) return;
+            activeCmd = cmd;
+            startTime = Date.now();
+            sendBLE(cmd);
+            document.getElementById(`key-${cmd}`)?.classList.add('active');
+        }
+
+        function stopMove(cmd) {
+            if(activeCmd !== cmd) return;
+            const duration = Date.now() - startTime;
+            
+            if(isRecording && duration > 100) {
+                missionData.push({ action: cmd, duration: duration });
+            }
+            
+            activeCmd = null;
+            sendBLE('S');
+            document.getElementById(`key-${cmd}`)?.classList.remove('active');
+        }
+
+        // --- NAVIGATION REPLAY ---
+        async function replayMission() {
+            if(missionData.length === 0) return alert("No mission data to replay!");
+            if(!characteristic) return alert("Connect Robot First!");
+
+            addToLog("Executing Replay...");
+            for(let step of missionData) {
+                sendBLE(step.action);
+                await new Promise(r => setTimeout(r, step.duration));
+                sendBLE('S');
+                await new Promise(r => setTimeout(r, 200)); // Motor cool-down
+            }
+            addToLog("Mission Complete.");
+        }
+
+        // --- UI HELPERS ---
+        function switchView(id) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        function renderSteps() {
+            const container = document.getElementById('stepContainer');
+            if(missionData.length === 0) return;
+            container.innerHTML = missionData.map((s, i) => `
+                <div class="step-item">
+                    <span><b>Step ${i+1}:</b> ${s.action}</span>
+                    <span class="step-meta">${s.duration}ms</span>
+                </div>
+            `).join('');
+        }
+
+        function downloadMission() {
+            const blob = new Blob([JSON.stringify(missionData, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `robot_mission_${Date.now()}.json`;
+            a.click();
+        }
+
+        function addToLog(msg) {
+            const log = document.getElementById('log');
+            log.innerHTML += `> ${msg}<br>`;
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // --- INPUT LISTENERS ---
+        const map = { 'w':'F', 'a':'L', 's':'B', 'd':'R', 'ArrowUp':'F', 'ArrowLeft':'L', 'ArrowDown':'B', 'ArrowRight':'R' };
+        
+        window.addEventListener('keydown', e => { if(map[e.key]) startMove(map[e.key]); });
+        window.addEventListener('keyup', e => { if(map[e.key]) stopMove(map[e.key]); });
+
+        // Touch support for UI buttons
+        ['F','L','R','B'].forEach(cmd => {
+            const btn = document.getElementById(`key-${cmd}`);
+            btn.addEventListener('pointerdown', () => startMove(cmd));
+            btn.addEventListener('pointerup', () => stopMove(cmd));
+            btn.addEventListener('pointerleave', () => stopMove(cmd));
+        });
     </script>
 </body>
 </html>
