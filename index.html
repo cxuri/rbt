@@ -1,428 +1,51 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AI Robot Kiosk</title>
+    <title>Bot Tester</title>
     <style>
-        :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --accent: #10b981;
-            --danger: #ef4444;
-            --bg-gradient: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
-            --glass: rgba(255, 255, 255, 0.1);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, system-ui, sans-serif;
-            background: var(--bg-gradient);
-            color: white;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        /* Header Area */
-        .header {
-            padding: 30px 20px;
-            text-align: center;
-            flex-shrink: 0;
-        }
-
-        .robot-icon {
-            font-size: 3.5rem;
-            margin-bottom: 5px;
-            display: inline-block;
-            animation: float 3s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-
-        /* Chat Display */
-        .chat-container {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            scroll-behavior: smooth;
-        }
-
-        /* Glassmorphism Scrollbar */
-        .chat-container::-webkit-scrollbar { width: 6px; }
-        .chat-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
-
-        .message {
-            max-width: 80%;
-            padding: 16px 22px;
-            border-radius: 25px;
-            font-size: 1.15rem;
-            line-height: 1.4;
-            animation: fadeIn 0.3s ease;
-            position: relative;
-        }
-
-        .message.ai {
-            align-self: flex-start;
-            background: var(--glass);
-            border-bottom-left-radius: 4px;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .message.user {
-            align-self: flex-end;
-            background: var(--primary);
-            border-bottom-right-radius: 4px;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Kiosk Controls */
-        .kiosk-footer {
-            padding: 25px;
-            background: rgba(0,0,0,0.4);
-            backdrop-filter: blur(20px);
-            border-top: 1px solid rgba(255,255,255,0.1);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
-            flex-shrink: 0;
-        }
-
-        .main-actions {
-            display: flex;
-            gap: 15px;
-            width: 100%;
-            max-width: 600px;
-        }
-
-        .btn-circle {
-            height: 70px;
-            border-radius: 35px;
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-        }
-
-        .btn-keyboard-toggle {
-            width: 70px;
-            background: var(--glass);
-            font-size: 1.5rem;
-        }
-
-        .btn-mic {
-            flex: 1;
-            background: var(--primary);
-            color: white;
-            font-weight: 700;
-            font-size: 1.3rem;
-            gap: 12px;
-        }
-
-        .btn-mic.recording {
-            background: var(--danger);
-            animation: pulse-red 1.5s infinite;
-        }
-
-        @keyframes pulse-red {
-            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-            70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-        }
-
-        /* Keyboard Input Bar (Hidden by default) */
-        .input-bar {
-            display: none;
-            width: 100%;
-            max-width: 600px;
-            gap: 10px;
-            animation: slideUp 0.3s ease;
-        }
-
-        .input-bar.active { display: flex; }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        input {
-            flex: 1;
-            padding: 15px 25px;
-            border-radius: 30px;
-            border: 1px solid rgba(255,255,255,0.2);
-            background: rgba(255,255,255,0.1);
-            color: white;
-            font-size: 1.1rem;
-            outline: none;
-        }
-
-        .btn-send {
-            background: var(--accent);
-            color: white;
-            border: none;
-            padding: 0 25px;
-            border-radius: 30px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        /* Typing Indicator */
-        .typing-indicator {
-            display: none;
-            align-self: flex-start;
-            padding: 15px 20px;
-            background: var(--glass);
-            border-radius: 20px;
-            margin-bottom: 15px;
-        }
-
-        .typing-indicator.show { display: flex; gap: 5px; }
-
-        .dot {
-            width: 8px;
-            height: 8px;
-            background: #94a3b8;
-            border-radius: 50%;
-            animation: bounce 1.4s infinite ease-in-out;
-        }
-
-        .dot:nth-child(2) { animation-delay: 0.2s; }
-        .dot:nth-child(3) { animation-delay: 0.4s; }
-
-        @keyframes bounce {
-            0%, 80%, 100% { transform: scale(0); }
-            40% { transform: scale(1); }
-        }
-
-        /* API Modal */
-        .modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.9);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            padding: 20px;
-        }
-
-        .modal.active { display: flex; }
-
-        .modal-content {
-            background: #1e293b;
-            padding: 40px;
-            border-radius: 25px;
-            width: 100%;
-            max-width: 450px;
-            text-align: center;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-        }
+        body { background: #1a1a1a; color: white; text-align: center; font-family: sans-serif; }
+        .controls { display: grid; grid-template-columns: repeat(3, 100px); gap: 10px; justify-content: center; margin-top: 50px; }
+        button { width: 100px; height: 100px; border-radius: 15px; border: none; background: #444; color: white; font-size: 20px; }
+        button:active { background: #6366f1; }
+        .conn-btn { width: 320px; height: 50px; margin-top: 20px; background: #10b981; }
     </style>
 </head>
 <body>
-
-    <div id="apiModal" class="modal">
-        <div class="modal-content">
-            <h2 style="margin-bottom: 10px;">🤖 System Setup</h2>
-            <p style="margin-bottom: 25px; opacity: 0.7;">Please enter your Gemini API Key to initialize the kiosk.</p>
-            <input type="password" id="apiKeyInput" placeholder="Enter API Key..." style="width: 100%; margin-bottom: 20px;">
-            <button class="btn-send" onclick="saveKey()" style="height: 55px; width: 100%; font-size: 1.1rem;">Initialize Robot</button>
-        </div>
+    <h2>6-Wheel Tank Control</h2>
+    <div id="status">Status: Disconnected</div>
+    
+    <div class="controls">
+        <button onclick="send('PIVOT_L,500')">Pivot L</button>
+        <button onclick="send('FORWARD,1000')">Forward</button>
+        <button onclick="send('PIVOT_R,500')">Pivot R</button>
+        <button onclick="send('LEFT,1000')">Skid L</button>
+        <button onclick="send('STOP,0')" style="background:#ef4444">STOP</button>
+        <button onclick="send('RIGHT,1000')">Skid R</button>
+        <div></div>
+        <button onclick="send('BACK,1000')">Back</button>
     </div>
 
-    <div class="header">
-        <div class="robot-icon">🤖</div>
-        <h1>Assistant</h1>
-        <p id="statusLabel" style="opacity: 0.5; font-size: 0.9rem;">Ready to assist</p>
-    </div>
-
-    <div class="chat-container" id="chatContainer">
-        <div class="message ai">Hello! I am your AI kiosk assistant. How can I help you today?</div>
-        <div class="typing-indicator" id="typingIndicator">
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
-        </div>
-    </div>
-
-    <div class="kiosk-footer">
-        <div class="main-actions">
-            <button class="btn-circle btn-keyboard-toggle" onclick="toggleKeyboard()">⌨️</button>
-            <button class="btn-circle btn-mic" id="voiceBtn" onclick="toggleVoiceRecording()">
-                <span id="micIcon">🎤</span>
-                <span id="micText">Tap to Speak</span>
-            </button>
-        </div>
-
-        <div class="input-bar" id="inputBar">
-            <input type="text" id="messageInput" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
-            <button class="btn-send" onclick="sendMessage()" id="sendBtn">Send</button>
-        </div>
-    </div>
+    <button class="conn-btn" onclick="connect()">CONNECT TO BOT</button>
 
     <script>
-        let API_KEY = localStorage.getItem('gemini_api_key') || '';
-        let isRecording = false;
-        let recognition = null;
-        let synthesis = window.speechSynthesis;
+        let botChar;
+        const S_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
+        const C_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
 
-        window.onload = function() {
-            if (!API_KEY) {
-                document.getElementById('apiModal').classList.add('active');
-            }
-            setupSpeechRecognition();
-        };
-
-        function saveKey() {
-            const val = document.getElementById('apiKeyInput').value.trim();
-            if (val) {
-                API_KEY = val;
-                localStorage.setItem('gemini_api_key', val);
-                document.getElementById('apiModal').classList.remove('active');
-            }
+        async function connect() {
+            const device = await navigator.bluetooth.requestDevice({
+                filters: [{ name: '6Wheel_Tank_Bot' }],
+                optionalServices: [S_UUID]
+            });
+            const server = await device.gatt.connect();
+            const service = await server.getPrimaryService(S_UUID);
+            botChar = await service.getCharacteristic(C_UUID);
+            document.getElementById('status').innerText = "Status: Connected!";
         }
 
-        function toggleKeyboard() {
-            const bar = document.getElementById('inputBar');
-            const isActive = bar.classList.toggle('active');
-            if (isActive) document.getElementById('messageInput').focus();
-        }
-
-        function setupSpeechRecognition() {
-            const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (Speech) {
-                recognition = new Speech();
-                recognition.continuous = false;
-                recognition.interimResults = false;
-                recognition.lang = 'en-US';
-
-                recognition.onstart = () => {
-                    isRecording = true;
-                    document.getElementById('voiceBtn').classList.add('recording');
-                    document.getElementById('micText').textContent = "Listening...";
-                    document.getElementById('statusLabel').textContent = "System: Listening...";
-                };
-
-                recognition.onresult = (event) => {
-                    const text = event.results[0][0].transcript;
-                    document.getElementById('messageInput').value = text;
-                    sendMessage();
-                };
-
-                recognition.onend = () => {
-                    isRecording = false;
-                    document.getElementById('voiceBtn').classList.remove('recording');
-                    document.getElementById('micText').textContent = "Tap to Speak";
-                    document.getElementById('statusLabel').textContent = "Ready";
-                };
-
-                recognition.onerror = () => {
-                    isRecording = false;
-                    document.getElementById('voiceBtn').classList.remove('recording');
-                };
-            }
-        }
-
-        function toggleVoiceRecording() {
-            if (!recognition) return alert("Speech not supported");
-            if (isRecording) recognition.stop();
-            else recognition.start();
-        }
-
-        function addMessage(content, isUser) {
-            const chat = document.getElementById('chatContainer');
-            const indicator = document.getElementById('typingIndicator');
-            
-            const msg = document.createElement('div');
-            msg.className = `message ${isUser ? 'user' : 'ai'}`;
-            msg.textContent = content;
-            
-            chat.insertBefore(msg, indicator);
-            chat.scrollTop = chat.scrollHeight;
-
-            if (!isUser) speakText(content);
-        }
-
-        function speakText(text) {
-    synthesis.cancel(); // Stop any current speech
-    const utter = new SpeechSynthesisUtterance(text);
-    
-    // Get all available voices
-    const voices = synthesis.getVoices();
-    
-    // 1. Try to find a high-quality English voice
-    // 2. Fall back to any English voice
-    // 3. Fall back to system default
-    const englishVoice = voices.find(v => v.lang === 'en-US' && v.name.includes('Google')) 
-                      || voices.find(v => v.lang.startsWith('en')) 
-                      || voices[0];
-
-    utter.voice = englishVoice;
-    utter.lang = 'en-US'; // Explicitly set the utterance language
-    synthesis.speak(utter);
-}
-        async function sendMessage() {
-            const input = document.getElementById('messageInput');
-            const message = input.value.trim();
-            if (!message || !API_KEY) return;
-
-            // UI Reset
-            input.value = '';
-            document.getElementById('inputBar').classList.remove('active');
-            addMessage(message, true);
-            
-            const indicator = document.getElementById('typingIndicator');
-            indicator.classList.add('show');
-            document.getElementById('chatContainer').scrollTop = document.getElementById('chatContainer').scrollHeight;
-
-            try {
-                const response = await fetch(
-  `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: message }] }]
-                    })
-                });
-
-                const data = await response.json();
-                indicator.classList.remove('show');
-
-                if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
-                    addMessage(data.candidates[0].content.parts[0].text, false);
-                } else {
-                    addMessage("I'm sorry, I couldn't process that.", false);
-                }
-            } catch (error) {
-                indicator.classList.remove('show');
-                addMessage("Connection error. Please try again.", false);
-            }
-        }
-
-        function handleKeyPress(e) {
-            if (e.key === 'Enter') sendMessage();
+        async function send(msg) {
+            if(!botChar) return alert("Connect first!");
+            await botChar.writeValue(new TextEncoder().encode(msg + "\n"));
         }
     </script>
 </body>
