@@ -70,6 +70,7 @@
         .settings-icon { 
             position: absolute; right: 20px; top: 25px; cursor: pointer; font-size: 1.3rem; 
             color: var(--text-muted); transition: 0.3s; padding: 5px; border-radius: 50%;
+            z-index: 20;
         }
         .settings-icon:hover { color: var(--text-main); transform: rotate(45deg); background: var(--surface); }
 
@@ -146,7 +147,6 @@
             background: var(--danger); box-shadow: 0 0 20px rgba(239, 68, 68, 0.4); 
             animation: pulse-red 1.5s infinite; 
         }
-        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); } 70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
 
         /* Text Input Bar */
         .input-bar { display: none; gap: 10px; animation: slideUp 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); margin-top: 5px; }
@@ -200,13 +200,13 @@
             <h3>⚙️ Appu Configuration</h3>
             <input type="password" id="keyInput" placeholder="Enter Gemini API Key...">
             <button class="btn-modal save" onclick="saveKey()">Save & Initialize</button>
-            <button class="btn-modal close" onclick="toggleSettings()">Cancel</button>
+            <button class="btn-modal close" onclick="closeSettings()">Cancel</button>
             <p id="keyStatus" style="font-size: 0.75rem; margin-top: 10px; font-weight: 600;"></p>
         </div>
     </div>
 
     <div class="header">
-        <span class="settings-icon" onclick="toggleSettings()" title="Settings">⚙️</span>
+        <span class="settings-icon" onclick="openSettings()" title="Settings">⚙️</span>
         <span class="robot-icon">🤖</span>
         <h2>Appu Navigator</h2>
         <div id="btStatus" class="status-pill offline">
@@ -257,23 +257,28 @@
         let recognition;
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-        // Configuration
-        function toggleSettings() {
+        // --- Configuration & Modal Logic ---
+        function openSettings() {
             const m = document.getElementById('settingsModal');
-            m.style.display = (m.style.display === 'flex') ? 'none' : 'flex';
-            if(m.style.display === 'flex') {
-                const existingKey = localStorage.getItem('gemini_key');
-                if(existingKey) document.getElementById('keyInput').value = existingKey;
+            m.style.display = 'flex'; // Explicitly set to flex
+            const existingKey = localStorage.getItem('gemini_key');
+            if(existingKey) {
+                document.getElementById('keyInput').value = existingKey;
             }
             updateKeyStatus();
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').style.display = 'none'; // Explicitly hide
         }
 
         function saveKey() {
             const key = document.getElementById('keyInput').value.trim();
             if(key) { 
                 localStorage.setItem('gemini_key', key); 
-                toggleSettings(); 
+                closeSettings(); 
                 addMessage("API key configured successfully.", false);
+                updateKeyStatus();
             }
         }
 
@@ -292,7 +297,7 @@
             }
         }
 
-        // Bluetooth
+        // --- Bluetooth Logic ---
         async function connectRobot() {
             try {
                 const device = await navigator.bluetooth.requestDevice({ filters: [{ services: [SERVICE_UUID] }] });
@@ -316,11 +321,11 @@
             console.log("Hardware Command Sent: " + char);
         }
 
-        // AI Logic
+        // --- AI Logic ---
         async function processAI(msg) {
             if (!msg.trim()) return;
             const API_KEY = localStorage.getItem('gemini_key');
-            if (!API_KEY) return toggleSettings();
+            if (!API_KEY) return openSettings(); // Open settings if no key
 
             // UI Feedback
             addMessage(msg, true);
@@ -378,10 +383,10 @@
             }
         }
 
+        // --- Chat & Voice Logic ---
         function addMessage(text, isUser) {
             const div = document.createElement('div');
             div.className = `message ${isUser ? 'user' : 'ai'}`;
-            // Use innerHTML to allow basic bolding (<b>) from the AI
             div.innerHTML = text;
             document.getElementById('chatSection').appendChild(div);
             scrollToBottom();
@@ -393,7 +398,6 @@
             view.scrollTop = view.scrollHeight;
         }
 
-        // Voice Engine
         function speak(text) {
             window.speechSynthesis.cancel();
             const u = new SpeechSynthesisUtterance(text);
@@ -403,7 +407,7 @@
             window.speechSynthesis.speak(u);
         }
 
-        // Mic Logic
+        // --- Microphone Logic ---
         function toggleMic() {
             if (!SpeechRecognition) {
                 alert("Speech Recognition is not supported in this browser. Please use Google Chrome.");
@@ -461,7 +465,7 @@
             }
         }
 
-        // Init
+        // Init on page load
         updateKeyStatus();
     </script>
 </body>
