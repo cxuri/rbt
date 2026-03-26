@@ -31,7 +31,7 @@
                 radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.05), transparent 25%);
             color: var(--text-main); 
             height: 100vh; 
-            height: 100dvh; /* For modern mobile browsers */
+            height: 100dvh; 
             display: flex; 
             flex-direction: column; 
             overflow: hidden; 
@@ -48,8 +48,13 @@
             position: relative;
             z-index: 10;
             box-shadow: var(--shadow-sm);
+            pointer-events: none;
         }
         
+        .header h2, .header .status-pill, .header .settings-icon, .header .robot-icon {
+            pointer-events: auto;
+        }
+
         .robot-icon { font-size: 2.2rem; display: block; margin-bottom: 4px; animation: float 3s ease-in-out infinite; }
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
 
@@ -66,26 +71,10 @@
         .offline { color: var(--text-muted); }
         .offline .status-dot { background: var(--danger); }
 
-       .settings-icon { 
-            position: absolute; 
-            right: 20px; 
-            top: 25px; 
-            cursor: pointer; 
-            font-size: 1.3rem; 
-            color: var(--text-muted); 
-            transition: 0.3s; 
-            padding: 10px; /* Increased hit area */
-            border-radius: 50%;
-            z-index: 20; /* Higher than the header */
-            display: block;
-        }
-
-        /* Ensure the header isn't eating the click */
-        .header {
-            pointer-events: none;
-        }
-        .header h2, .header .status-pill, .header .settings-icon, .header .robot-icon {
-            pointer-events: auto;
+        .settings-icon { 
+            position: absolute; right: 20px; top: 25px; cursor: pointer; 
+            font-size: 1.3rem; color: var(--text-muted); transition: 0.3s; 
+            padding: 10px; border-radius: 50%; z-index: 20; display: block;
         }
         .settings-icon:hover { color: var(--text-main); transform: scale(1.1); background: var(--surface); }
 
@@ -99,19 +88,12 @@
         .message { 
             max-width: 85%; padding: 14px 20px; border-radius: 24px; line-height: 1.5; 
             font-size: 1rem; animation: slideIn 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
-            box-shadow: var(--shadow-sm);
-            word-wrap: break-word;
+            box-shadow: var(--shadow-sm); word-wrap: break-word;
         }
         @keyframes slideIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
-        .ai { 
-            align-self: flex-start; background: var(--surface-elevated); border: 1px solid var(--border); 
-            border-bottom-left-radius: 6px; color: var(--text-main);
-        }
-        .user { 
-            align-self: flex-end; background: var(--primary-gradient); color: white; 
-            border-bottom-right-radius: 6px; border: 1px solid rgba(255,255,255,0.1);
-        }
+        .ai { align-self: flex-start; background: var(--surface-elevated); border: 1px solid var(--border); border-bottom-left-radius: 6px; color: var(--text-main); }
+        .user { align-self: flex-end; background: var(--primary-gradient); color: white; border-bottom-right-radius: 6px; border: 1px solid rgba(255,255,255,0.1); }
 
         /* Typing Indicator */
         .typing { display: none; align-self: flex-start; padding: 14px 22px; background: var(--surface-elevated); border: 1px solid var(--border); border-radius: 24px; border-bottom-left-radius: 6px; gap: 6px; margin-bottom: 10px; }
@@ -127,60 +109,31 @@
         }
         .controls-wrapper { max-width: 768px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
         
-        /* Quick Nav Buttons */
-        .quick-nav {
-            display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; 
-            -webkit-overflow-scrolling: touch;
-        }
+        .quick-nav { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
         .quick-nav::-webkit-scrollbar { display: none; }
         
-        .nav-pill {
-            background: var(--surface); border: 1px solid var(--border); color: var(--text-main);
-            padding: 10px 18px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;
-            cursor: pointer; white-space: nowrap; transition: all 0.2s ease; display: flex; align-items: center; gap: 6px;
-        }
+        .nav-pill { background: var(--surface); border: 1px solid var(--border); color: var(--text-main); padding: 10px 18px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.2s ease; display: flex; align-items: center; gap: 6px; }
         .nav-pill:active { transform: scale(0.95); }
         .nav-pill:hover { background: var(--surface-elevated); border-color: rgba(255,255,255,0.2); }
 
         .main-actions { display: flex; gap: 12px; width: 100%; align-items: center; }
         
-        .btn-icon { 
-            width: 60px; height: 60px; border-radius: 20px; border: 1px solid var(--border); 
-            background: var(--surface); color: white; font-size: 1.4rem; cursor: pointer; 
-            transition: all 0.2s ease; display: flex; justify-content: center; align-items: center;
-        }
+        .btn-icon { width: 60px; height: 60px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface); color: white; font-size: 1.4rem; cursor: pointer; transition: all 0.2s ease; display: flex; justify-content: center; align-items: center; }
         .btn-icon:active { transform: scale(0.95); background: var(--surface-elevated); }
 
-        .btn-mic { 
-            flex: 1; height: 60px; border-radius: 20px; border: none; background: var(--primary-gradient); 
-            color: white; font-weight: 600; font-size: 1.05rem; display: flex; align-items: center; 
-            justify-content: center; gap: 10px; cursor: pointer; transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
-        }
+        .btn-mic { flex: 1; height: 60px; border-radius: 20px; border: none; background: var(--primary-gradient); color: white; font-weight: 600; font-size: 1.05rem; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3); }
         .btn-mic:active { transform: scale(0.98); }
-        .btn-mic.listening { 
-            background: var(--danger); box-shadow: 0 0 20px rgba(239, 68, 68, 0.4); 
-            animation: pulse-red 1.5s infinite; 
-        }
+        .btn-mic.listening { background: var(--danger); box-shadow: 0 0 20px rgba(239, 68, 68, 0.4); animation: pulse-red 1.5s infinite; }
         @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); } 70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
 
-        /* Text Input Bar */
         .input-bar { display: none; gap: 10px; animation: slideUp 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); margin-top: 5px; }
         .input-bar.active { display: flex; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        input#userInput { 
-            flex: 1; padding: 0 20px; border-radius: 18px; border: 1px solid var(--border);
-            background: var(--surface); color: var(--text-main); outline: none; font-size: 1rem;
-            transition: border-color 0.3s; height: 55px;
-        }
+        input#userInput { flex: 1; padding: 0 20px; border-radius: 18px; border: 1px solid var(--border); background: var(--surface); color: var(--text-main); outline: none; font-size: 1rem; transition: border-color 0.3s; height: 55px; }
         input#userInput:focus { border-color: var(--primary); background: var(--surface-elevated); }
 
-        .btn-send {
-            width: 55px; height: 55px; border-radius: 18px; border: none; background: var(--primary-gradient);
-            color: white; font-size: 1.2rem; cursor: pointer; transition: 0.2s;
-            display: flex; justify-content: center; align-items: center;
-        }
+        .btn-send { width: 55px; height: 55px; border-radius: 18px; border: none; background: var(--primary-gradient); color: white; font-size: 1.2rem; cursor: pointer; transition: 0.2s; display: flex; justify-content: center; align-items: center; }
         .btn-send:active { transform: scale(0.95); }
 
     </style>
@@ -239,14 +192,11 @@
         let recognition;
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-        // --- Quick API Key Management ---
         function manageAPIKey() {
             const currentKey = localStorage.getItem('gemini_key') || '';
             const newKey = window.prompt("🔑 Enter your Gemini API Key:\n\n(To remove the current key, clear this text box and click OK)", currentKey);
             
-            if (newKey === null) {
-                return; // User clicked Cancel
-            }
+            if (newKey === null) return;
             
             if (newKey.trim() === '') {
                 localStorage.removeItem('gemini_key');
@@ -265,8 +215,13 @@
             }
         }
 
-        // Bluetooth
         async function connectRobot() {
+            // FIX: Prevent mobile crash by ensuring HTTPS
+            if (!window.isSecureContext) {
+                addMessage("⚠️ Bluetooth requires an HTTPS connection. Host this on GitHub Pages.", false);
+                return;
+            }
+
             try {
                 const device = await navigator.bluetooth.requestDevice({ filters: [{ services: [SERVICE_UUID] }] });
                 const server = await device.gatt.connect();
@@ -279,7 +234,7 @@
             } catch (e) { 
                 console.error(e); 
                 if(e.name !== "NotFoundError") {
-                    addMessage("Bluetooth connection failed. Ensure the ESP32 is powered on and paired.", false);
+                    addMessage("Bluetooth connection failed: " + e.message, false);
                 }
             }
         }
@@ -289,13 +244,16 @@
             console.log("Hardware Command Sent: " + char);
         }
 
-        // AI Logic
-       async function processAI(msg) {
+        async function processAI(msg) {
             if (!msg.trim()) return;
             const API_KEY = localStorage.getItem('gemini_key');
-            if (!API_KEY) return toggleSettings();
+            
+            // FIX: Changed from undefined toggleSettings() to manageAPIKey()
+            if (!API_KEY) {
+                addMessage("Please provide your API key first.", false);
+                return manageAPIKey();
+            }
 
-            // UI Feedback
             addMessage(msg, true);
             document.getElementById('userInput').value = '';
             document.getElementById('inputBar').classList.remove('active');
@@ -304,17 +262,19 @@
             indicator.style.display = 'flex';
             scrollToBottom();
 
-            // The Comprehensive System Prompt
+            // FIX: Updated system prompt to strictly enforce "Going to the [Location]."
             const prompt = `
                 Identity: You are "Appu", an autonomous indoor navigation robot.
-                Creators: Designed and developed by S8 EEE students for a campus project.
-                Hardware: You run on an ESP32, using a 6-wheel tank-style chassis with skid-steering, GY-87 10DOF IMU, and ultrasonic sensors.
-
                 Available Hardware Commands: [MOVE_F], [MOVE_B], [MOVE_L], [MOVE_R], [MOVE_S].
-                Instructions: Be professional, friendly, and concise. If the user asks you to move to a location, determine the best direction and ALWAYS include the exact bracketed command in your text. For example, "Moving forward to the office. [MOVE_F]". If they ask you to stop, output "[MOVE_S]".
+                
+                CRITICAL INSTRUCTION: If the user asks you to move to a location, determine the best command, and respond EXACTLY in this format: "Going to the [Location Name]." plus the bracketed command. Do not use conversational filler. 
+                Example 1: User says "Take me to the Office" -> You output: "Going to the Office. [MOVE_F]"
+                Example 2: User says "Where is the lift?" -> You output: "Going to the Lift. [MOVE_L]"
+                Example 3: User says "Stop" -> You output: "Stopping. [MOVE_S]"
             `;
 
             try {
+                // Kept gemini-2.5-flash as requested
                 const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -326,20 +286,17 @@
                 
                 const data = await res.json();
                 
-                if (!data.candidates || !data.candidates[0].content.parts[0].text) {
-                    throw new Error("Invalid Response from AI");
-                }
+                if (data.error) throw new Error(data.error.message);
+                if (!data.candidates || !data.candidates[0].content.parts[0].text) throw new Error("Invalid Response from AI");
 
                 const aiText = data.candidates[0].content.parts[0].text;
 
-                // Execute Hardware Commands via Bluetooth
                 if (aiText.includes("MOVE_F")) sendCmd('F');
                 if (aiText.includes("MOVE_B")) sendCmd('B');
                 if (aiText.includes("MOVE_L")) sendCmd('L');
                 if (aiText.includes("MOVE_R")) sendCmd('R');
                 if (aiText.includes("MOVE_S")) sendCmd('S');
 
-                // Hide indicator and clean text for the UI
                 indicator.style.display = 'none';
                 const cleanText = aiText.replace(/\[MOVE_[FBRLS]\]/g, '').trim();
                 addMessage(cleanText, false);
@@ -347,15 +304,13 @@
             } catch (e) { 
                 console.error(e);
                 indicator.style.display = 'none';
-                addMessage("I am having trouble connecting to my cloud brain. Please verify your API key and internet connection.", false); 
+                addMessage("Error communicating with AI: " + e.message, false); 
             }
         }
-
 
         function addMessage(text, isUser) {
             const div = document.createElement('div');
             div.className = `message ${isUser ? 'user' : 'ai'}`;
-            // Use innerHTML to allow basic bolding (<b>) from the AI
             div.innerHTML = text;
             document.getElementById('chatSection').appendChild(div);
             scrollToBottom();
@@ -367,7 +322,6 @@
             view.scrollTop = view.scrollHeight;
         }
 
-        // Voice Engine
         function speak(text) {
             window.speechSynthesis.cancel();
             const u = new SpeechSynthesisUtterance(text);
@@ -377,10 +331,14 @@
             window.speechSynthesis.speak(u);
         }
 
-        // Mic Logic
         function toggleMic() {
+            // FIX: Ensure secure context for mobile microphone
+            if (!window.isSecureContext) {
+                alert("Mobile Warning: The Microphone requires an HTTPS connection to work.");
+                return;
+            }
             if (!SpeechRecognition) {
-                alert("Speech Recognition is not supported in this browser. Please use Google Chrome.");
+                alert("Speech Recognition is not supported in this browser.");
                 return;
             }
 
@@ -416,9 +374,7 @@
                 label.innerText = "Tap to Speak";
                 
                 if (event.error === 'not-allowed') {
-                    alert("Microphone access denied. Please allow microphone permissions in your browser settings.");
-                } else if (event.error === 'network' || window.location.protocol === 'file:') {
-                    alert("Microphone requires a secure connection. Run this file via a local server (localhost) or HTTPS.");
+                    alert("Microphone access denied. Please allow microphone permissions.");
                 }
             };
 
