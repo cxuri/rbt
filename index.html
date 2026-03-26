@@ -325,7 +325,7 @@
         async function processAI(msg) {
             if (!msg.trim()) return;
             const API_KEY = localStorage.getItem('gemini_key');
-            if (!API_KEY) return openSettings(); 
+            if (!API_KEY) return openSettings(); // Open settings if no key
 
             // UI Feedback
             addMessage(msg, true);
@@ -336,17 +336,22 @@
             indicator.style.display = 'flex';
             scrollToBottom();
 
+            // The Comprehensive System Prompt
             const prompt = `
                 Identity: You are "Appu", an autonomous indoor navigation robot.
-                Creators: Designed and developed by S8 EEE students for a campus project.
+                Creators: Designed and developed by S8 EEE students for the campus project.
                 Hardware: You run on an ESP32, using a 6-wheel tank-style chassis with skid-steering, GY-87 10DOF IMU, and ultrasonic sensors.
-
-                Available Hardware Commands: [MOVE_F], [MOVE_B], [MOVE_L], [MOVE_R], [MOVE_S].
-                Instructions: Be professional, friendly, and concise. If the user asks you to move to a location, determine the best direction and ALWAYS include the exact bracketed command in your text. For example, "Moving forward to the office. [MOVE_F]". If they ask you to stop, output "[MOVE_S]".
+                Navigation Rules: 
+                1. If asked for the Office Room, use [MOVE_F] and mention the Red path.
+                2. If asked for the Lift, use [MOVE_L] and mention the Green path.
+                3. If asked for the Principal Room, greet "Thomas Sir" and use [MOVE_R] for the Yellow path.
+                4. If a user asks to stop, use [MOVE_S].
+                
+                Available Commands: [MOVE_F], [MOVE_B], [MOVE_L], [MOVE_R], [MOVE_S].
+                Style: Professional, respectful, and concise. Always include the command bracket in your response if movement is required.
             `;
 
             try {
-                // BUG FIX: Changed gemini-2.5-flash to the correct working model gemini-1.5-flash
                 const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
