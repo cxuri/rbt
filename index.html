@@ -191,6 +191,11 @@
         .save:active { transform: scale(0.98); }
         .close { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
         .close:active { background: var(--surface); }
+
+        @keyframes fadeIn { 
+            from { opacity: 0; } 
+            to { opacity: 1; } 
+        }
     </style>
 </head>
 <body>
@@ -460,7 +465,12 @@
                 console.error("Mic start error:", e);
             }
         }
-
+        window.onclick = function(event) {
+            const modal = document.getElementById('settingsModal');
+            if (event.target === modal && modal.style.display === 'flex') {
+                toggleSettings();
+            }
+        };
         // Init
         updateKeyStatus();
     </script>
