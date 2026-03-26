@@ -290,13 +290,10 @@
         }
 
         // AI Logic
-        async function processAI(msg) {
+       async function processAI(msg) {
             if (!msg.trim()) return;
             const API_KEY = localStorage.getItem('gemini_key');
-            
-            if (!API_KEY) {
-                return manageAPIKey(); // Prompt user for key if missing
-            }
+            if (!API_KEY) return toggleSettings();
 
             // UI Feedback
             addMessage(msg, true);
@@ -310,11 +307,11 @@
             // The Comprehensive System Prompt
             const prompt = `
                 Identity: You are "Appu", an autonomous indoor navigation robot.
-                Creators: Designed and developed by S8 EEE students for the campus project.
+                Creators: Designed and developed by S8 EEE students for a campus project.
                 Hardware: You run on an ESP32, using a 6-wheel tank-style chassis with skid-steering, GY-87 10DOF IMU, and ultrasonic sensors.
-                
-                Available Commands: [MOVE_F], [MOVE_B], [MOVE_L], [MOVE_R], [MOVE_S].
-                Style: Professional, respectful, and concise. Always include the command bracket in your response if movement is required.
+
+                Available Hardware Commands: [MOVE_F], [MOVE_B], [MOVE_L], [MOVE_R], [MOVE_S].
+                Instructions: Be professional, friendly, and concise. If the user asks you to move to a location, determine the best direction and ALWAYS include the exact bracketed command in your text. For example, "Moving forward to the office. [MOVE_F]". If they ask you to stop, output "[MOVE_S]".
             `;
 
             try {
@@ -330,7 +327,7 @@
                 const data = await res.json();
                 
                 if (!data.candidates || !data.candidates[0].content.parts[0].text) {
-                    throw new Error("Invalid Response");
+                    throw new Error("Invalid Response from AI");
                 }
 
                 const aiText = data.candidates[0].content.parts[0].text;
@@ -342,7 +339,7 @@
                 if (aiText.includes("MOVE_R")) sendCmd('R');
                 if (aiText.includes("MOVE_S")) sendCmd('S');
 
-                // Hide indicator and show cleaned text (removing the bracket codes from the UI)
+                // Hide indicator and clean text for the UI
                 indicator.style.display = 'none';
                 const cleanText = aiText.replace(/\[MOVE_[FBRLS]\]/g, '').trim();
                 addMessage(cleanText, false);
@@ -350,9 +347,10 @@
             } catch (e) { 
                 console.error(e);
                 indicator.style.display = 'none';
-                addMessage("I'm having trouble connecting to my brain. Please check your API key.", false); 
+                addMessage("I am having trouble connecting to my cloud brain. Please verify your API key and internet connection.", false); 
             }
         }
+
 
         function addMessage(text, isUser) {
             const div = document.createElement('div');
