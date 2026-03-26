@@ -53,7 +53,6 @@
         .robot-icon { font-size: 2.2rem; display: block; margin-bottom: 4px; animation: float 3s ease-in-out infinite; }
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
 
-        .header h2 { font-size: 1.2rem; font-weight: 700; letter-spacing: 0.5px; }
 
         .status-pill { 
             display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; 
@@ -67,11 +66,28 @@
         .offline { color: var(--text-muted); }
         .offline .status-dot { background: var(--danger); }
 
-        .settings-icon { 
-            position: absolute; right: 20px; top: 25px; cursor: pointer; font-size: 1.3rem; 
-            color: var(--text-muted); transition: 0.3s; padding: 5px; border-radius: 50%;
+       .settings-icon { 
+            position: absolute; 
+            right: 20px; 
+            top: 25px; 
+            cursor: pointer; 
+            font-size: 1.3rem; 
+            color: var(--text-muted); 
+            transition: 0.3s; 
+            padding: 10px; /* Increased hit area */
+            border-radius: 50%;
+            z-index: 20; /* Higher than the header */
+            display: block;
         }
-        .settings-icon:hover { color: var(--text-main); transform: rotate(45deg); background: var(--surface); }
+
+        /* Ensure the header isn't eating the click */
+        .header {
+            pointer-events: none;
+        }
+        .header h2, .header .status-pill, .header .settings-icon, .header .robot-icon {
+            pointer-events: auto;
+        }
+        .settings-icon:hover { color: var(--text-main); transform: scale(1.1); background: var(--surface); }
 
         /* --- Chat Main --- */
         .main-view { 
@@ -167,51 +183,12 @@
         }
         .btn-send:active { transform: scale(0.95); }
 
-        /* --- Modal --- */
-        #settingsModal {
-            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); 
-            z-index: 100; align-items: center; justify-content: center; padding: 20px; 
-            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-            animation: fadeIn 0.2s ease;
-        }
-        .modal-content { 
-            background: var(--surface-elevated); padding: 35px 25px; border-radius: 28px; 
-            width: 100%; max-width: 380px; border: 1px solid var(--border); text-align: center;
-            box-shadow: var(--shadow-lg);
-        }
-        .modal-content h3 { margin-bottom: 20px; font-weight: 600; }
-        .modal-content input { 
-            width: 100%; padding: 16px; margin-bottom: 20px; border-radius: 16px; 
-            border: 1px solid var(--border); background: var(--bg-dark); color: white; outline: none;
-            font-size: 0.95rem; transition: border 0.3s;
-        }
-        .modal-content input:focus { border-color: var(--primary); }
-        .btn-modal { padding: 16px; border-radius: 16px; border: none; width: 100%; font-weight: 600; font-size: 1rem; cursor: pointer; margin-bottom: 12px; transition: 0.2s; }
-        .save { background: var(--primary-gradient); color: white; }
-        .save:active { transform: scale(0.98); }
-        .close { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
-        .close:active { background: var(--surface); }
-
-        @keyframes fadeIn { 
-            from { opacity: 0; } 
-            to { opacity: 1; } 
-        }
     </style>
 </head>
 <body>
 
-    <div id="settingsModal">
-        <div class="modal-content">
-            <h3>⚙️ Appu Configuration</h3>
-            <input type="password" id="keyInput" placeholder="Enter Gemini API Key...">
-            <button class="btn-modal save" onclick="saveKey()">Save & Initialize</button>
-            <button class="btn-modal close" onclick="toggleSettings()">Cancel</button>
-            <p id="keyStatus" style="font-size: 0.75rem; margin-top: 10px; font-weight: 600;"></p>
-        </div>
-    </div>
-
     <div class="header">
-        <span class="settings-icon" onclick="toggleSettings()" title="Settings">⚙️</span>
+        <span class="settings-icon" onclick="manageAPIKey()" title="Manage API Key">🔑</span>
         <span class="robot-icon">🤖</span>
         <h2>Appu Navigator</h2>
         <div id="btStatus" class="status-pill offline">
@@ -262,31 +239,22 @@
         let recognition;
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-        // Configuration
-        function toggleSettings() {
-            const m = document.getElementById('settingsModal');
-            m.style.display = (m.style.display === 'flex') ? 'none' : 'flex';
-            if(m.style.display === 'flex') {
-                const existingKey = localStorage.getItem('gemini_key');
-                if(existingKey) document.getElementById('keyInput').value = existingKey;
+        // --- Quick API Key Management ---
+        function manageAPIKey() {
+            const currentKey = localStorage.getItem('gemini_key') || '';
+            const newKey = window.prompt("🔑 Enter your Gemini API Key:\n\n(To remove the current key, clear this text box and click OK)", currentKey);
+            
+            if (newKey === null) {
+                return; // User clicked Cancel
             }
-            updateKeyStatus();
-        }
-
-        function saveKey() {
-            const key = document.getElementById('keyInput').value.trim();
-            if(key) { 
-                localStorage.setItem('gemini_key', key); 
-                toggleSettings(); 
-                addMessage("API key configured successfully.", false);
+            
+            if (newKey.trim() === '') {
+                localStorage.removeItem('gemini_key');
+                addMessage("API key removed.", false);
+            } else {
+                localStorage.setItem('gemini_key', newKey.trim());
+                addMessage("API key saved successfully.", false);
             }
-        }
-
-        function updateKeyStatus() {
-            const key = localStorage.getItem('gemini_key');
-            const s = document.getElementById('keyStatus');
-            s.innerText = key ? "✅ API KEY LOADED" : "❌ KEY MISSING";
-            s.style.color = key ? "var(--accent)" : "var(--danger)";
         }
 
         function toggleKeyboard() {
@@ -325,7 +293,10 @@
         async function processAI(msg) {
             if (!msg.trim()) return;
             const API_KEY = localStorage.getItem('gemini_key');
-            if (!API_KEY) return toggleSettings();
+            
+            if (!API_KEY) {
+                return manageAPIKey(); // Prompt user for key if missing
+            }
 
             // UI Feedback
             addMessage(msg, true);
@@ -339,11 +310,11 @@
             // The Comprehensive System Prompt
             const prompt = `
                 Identity: You are "Appu", an autonomous indoor navigation robot.
-                Creators: Designed and developed by S8 EEE students for a campus project.
+                Creators: Designed and developed by S8 EEE students for the campus project.
                 Hardware: You run on an ESP32, using a 6-wheel tank-style chassis with skid-steering, GY-87 10DOF IMU, and ultrasonic sensors.
-
-                Available Hardware Commands: [MOVE_F], [MOVE_B], [MOVE_L], [MOVE_R], [MOVE_S].
-                Instructions: Be professional, friendly, and concise. If the user asks you to move to a location, determine the best direction and ALWAYS include the exact bracketed command in your text. For example, "Moving forward to the office. [MOVE_F]". If they ask you to stop, output "[MOVE_S]".
+                
+                Available Commands: [MOVE_F], [MOVE_B], [MOVE_L], [MOVE_R], [MOVE_S].
+                Style: Professional, respectful, and concise. Always include the command bracket in your response if movement is required.
             `;
 
             try {
@@ -359,7 +330,7 @@
                 const data = await res.json();
                 
                 if (!data.candidates || !data.candidates[0].content.parts[0].text) {
-                    throw new Error("Invalid Response from AI");
+                    throw new Error("Invalid Response");
                 }
 
                 const aiText = data.candidates[0].content.parts[0].text;
@@ -371,7 +342,7 @@
                 if (aiText.includes("MOVE_R")) sendCmd('R');
                 if (aiText.includes("MOVE_S")) sendCmd('S');
 
-                // Hide indicator and clean text for the UI
+                // Hide indicator and show cleaned text (removing the bracket codes from the UI)
                 indicator.style.display = 'none';
                 const cleanText = aiText.replace(/\[MOVE_[FBRLS]\]/g, '').trim();
                 addMessage(cleanText, false);
@@ -379,7 +350,7 @@
             } catch (e) { 
                 console.error(e);
                 indicator.style.display = 'none';
-                addMessage("I am having trouble connecting to my cloud brain. Please verify your API key and internet connection.", false); 
+                addMessage("I'm having trouble connecting to my brain. Please check your API key.", false); 
             }
         }
 
@@ -465,14 +436,6 @@
                 console.error("Mic start error:", e);
             }
         }
-        window.onclick = function(event) {
-            const modal = document.getElementById('settingsModal');
-            if (event.target === modal && modal.style.display === 'flex') {
-                toggleSettings();
-            }
-        };
-        // Init
-        updateKeyStatus();
     </script>
 </body>
 </html>
