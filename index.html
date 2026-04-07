@@ -45,12 +45,6 @@
             -webkit-backdrop-filter: blur(12px);
             position: relative;
             z-index: 10;
-            box-shadow: var(--shadow-sm);
-            pointer-events: none;
-        }
-        
-        .header h2, .header .status-pill, .header .robot-icon {
-            pointer-events: auto;
         }
 
         .robot-icon { font-size: 2.2rem; display: block; margin-bottom: 4px; animation: float 3s ease-in-out infinite; }
@@ -60,7 +54,6 @@
             display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; 
             border-radius: 30px; font-size: 0.7rem; font-weight: 700; background: var(--surface); 
             margin-top: 10px; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid var(--border);
-            transition: all 0.3s ease;
         }
         .status-dot { width: 8px; height: 8px; border-radius: 50%; transition: all 0.3s ease; }
         .online { color: var(--accent); border-color: rgba(16, 185, 129, 0.2); background: rgba(16, 185, 129, 0.05); }
@@ -68,27 +61,92 @@
         .offline { color: var(--text-muted); }
         .offline .status-dot { background: var(--danger); }
 
-        /* --- Chat Main --- */
-        .main-view { 
-            flex: 1; overflow-y: auto; padding: 25px 20px; 
-            display: flex; flex-direction: column; scroll-behavior: smooth;
-        }
-        .chat-container { display: flex; flex-direction: column; gap: 20px; max-width: 768px; margin: 0 auto; width: 100%; padding-bottom: 10px; }
-        
-        .message { 
-            max-width: 85%; padding: 14px 20px; border-radius: 24px; line-height: 1.5; 
-            font-size: 1rem; animation: slideIn 0.3s forwards;
-            box-shadow: var(--shadow-sm); word-wrap: break-word;
-        }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        /* --- View Management --- */
+        .view { flex: 1; overflow-y: auto; padding: 25px 20px; display: flex; flex-direction: column; scroll-behavior: smooth; }
+        .hidden { display: none !important; }
 
+        /* --- Chat Main --- */
+        .chat-container { display: flex; flex-direction: column; gap: 20px; max-width: 768px; margin: 0 auto; width: 100%; padding-bottom: 10px; }
+        .message { max-width: 85%; padding: 14px 20px; border-radius: 24px; line-height: 1.5; font-size: 1rem; animation: slideIn 0.3s forwards; box-shadow: var(--shadow-sm); word-wrap: break-word; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
         .ai { align-self: flex-start; background: var(--surface-elevated); border: 1px solid var(--border); border-bottom-left-radius: 6px; color: var(--text-main); }
         .user { align-self: flex-end; background: var(--primary-gradient); color: white; border-bottom-right-radius: 6px; border: 1px solid rgba(255,255,255,0.1); }
+
+        .saved-paths-container { max-width: 768px; margin: 20px auto 0; width: 100%; }
+        .saved-paths-header { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+        .path-card { background: var(--surface-elevated); border: 1px solid var(--border); padding: 12px 16px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .path-info h4 { font-size: 1rem; margin-bottom: 4px; }
+        .path-info p { font-size: 0.8rem; color: var(--text-muted); }
+        .play-btn { background: var(--primary-gradient); border: none; color: white; width: 40px; height: 40px; border-radius: 12px; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; transition: 0.2s;}
+        .play-btn:active { transform: scale(0.9); }
+
+        /* --- Settings & Recording "Page" --- */
+        .settings-container { max-width: 768px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 20px; align-items: center; padding-bottom: 20px; }
+        
+        .page-title { width: 100%; display: flex; align-items: center; gap: 15px; font-size: 1.2rem; font-weight: 700; margin-bottom: 5px; }
+        .btn-back { background: var(--surface-elevated); border: 1px solid var(--border); color: white; width: 40px; height: 40px; border-radius: 12px; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 1.2rem; transition: 0.2s; }
+        .btn-back:active { transform: scale(0.9); background: var(--surface); }
+
+        .record-panel { background: var(--surface-elevated); border: 1px solid var(--border); padding: 20px; border-radius: 20px; width: 100%; text-align: center; }
+        .record-status { font-size: 0.95rem; color: var(--text-muted); margin-bottom: 15px; display: flex; justify-content: center; align-items: center; gap: 8px;}
+        .record-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--danger); display: none; }
+        .is-recording .record-dot { display: block; animation: pulse-red 1.5s infinite; }
+        
+        .btn-record { background: var(--bg-dark); border: 1px solid var(--danger); color: var(--danger); padding: 14px 24px; border-radius: 14px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: 0.2s; width: 100%; margin-bottom: 10px;}
+        .is-recording .btn-record { background: var(--danger); color: white; }
+        .btn-save { background: var(--primary-gradient); border: none; color: white; padding: 14px 24px; border-radius: 14px; font-weight: 600; font-size: 1rem; cursor: pointer; width: 100%; display: none;}
+
+        /* TRUE D-PAD JOYSTICK CONTROLLER */
+        .joystick-wrapper {
+            display: flex; justify-content: center; align-items: center; width: 100%; margin-top: 5px;
+            touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+        }
+
+        .joystick-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 85px);
+            grid-template-rows: repeat(3, 85px);
+            gap: 8px;
+            padding: 25px;
+            background: rgba(19, 27, 47, 0.7);
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.5), 0 10px 25px rgba(0,0,0,0.3);
+        }
+        
+        .joy-btn {
+            background: var(--surface-elevated); border: none; color: white; font-size: 1.8rem; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.05s; 
+            box-shadow: 0 6px 0 rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+            touch-action: none; -webkit-tap-highlight-color: transparent;
+        }
+        
+        /* Swapped :active for a .pressed class so keyboard can trigger the UI animation too */
+        .joy-btn.pressed { 
+            transform: translateY(6px); 
+            box-shadow: 0 0px 0 rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+            background: var(--primary); 
+        }
+        
+        .joy-up { grid-column: 2; grid-row: 1; border-radius: 16px 16px 4px 4px; }
+        .joy-left { grid-column: 1; grid-row: 2; border-radius: 16px 4px 4px 16px; }
+        .joy-right { grid-column: 3; grid-row: 2; border-radius: 4px 16px 16px 4px; }
+        .joy-down { grid-column: 2; grid-row: 3; border-radius: 4px 4px 16px 16px; }
+        
+        .joy-stop { 
+            grid-column: 2; grid-row: 2; background: var(--surface); border-radius: 50%; font-size: 1.2rem;
+            box-shadow: 0 6px 0 rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+        }
+        .joy-stop.pressed { 
+            background: var(--danger); box-shadow: 0 0px 0 #991b1b, inset 0 1px 0 rgba(255,255,255,0.2);
+            transform: translateY(6px); 
+        }
+
+        .keyboard-hint { text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 10px; }
 
         /* --- Footer & Controls --- */
         .footer { 
             padding: 15px 20px 25px 20px; background: rgba(7, 11, 20, 0.85); border-top: 1px solid var(--border);
-            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); z-index: 20; position: relative;
         }
         .controls-wrapper { max-width: 768px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
         
@@ -97,26 +155,25 @@
         
         .nav-pill { background: var(--surface); border: 1px solid var(--border); color: var(--text-main); padding: 10px 18px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.2s ease; display: flex; align-items: center; gap: 6px; }
         .nav-pill:active { transform: scale(0.95); }
-        .nav-pill:hover { background: var(--surface-elevated); border-color: rgba(255,255,255,0.2); }
-
-        .main-actions { display: flex; gap: 12px; width: 100%; align-items: center; }
+        .nav-pill.danger { color: var(--danger); border-color: rgba(239, 68, 68, 0.3); }
         
-        .btn-icon { width: 60px; height: 60px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface); color: white; font-size: 1.4rem; cursor: pointer; transition: all 0.2s ease; display: flex; justify-content: center; align-items: center; }
+        .main-actions { display: flex; gap: 12px; width: 100%; align-items: center; }
+        .btn-icon { width: 55px; height: 55px; border-radius: 18px; border: 1px solid var(--border); background: var(--surface); color: white; font-size: 1.4rem; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: 0.2s;}
         .btn-icon:active { transform: scale(0.95); background: var(--surface-elevated); }
-
-        .btn-mic { flex: 1; height: 60px; border-radius: 20px; border: none; background: var(--primary-gradient); color: white; font-weight: 600; font-size: 1.05rem; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3); }
+        
+        .btn-mic { flex: 1; height: 55px; border-radius: 18px; border: none; background: var(--primary-gradient); color: white; font-weight: 600; font-size: 1rem; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: all 0.3s; }
         .btn-mic:active { transform: scale(0.98); }
         .btn-mic.listening { background: var(--danger); box-shadow: 0 0 20px rgba(239, 68, 68, 0.4); animation: pulse-red 1.5s infinite; }
-        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); } 70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
 
+        /* --- Input Bar --- */
         .input-bar { display: none; gap: 10px; margin-top: 5px; }
         .input-bar.active { display: flex; }
-
         input#userInput { flex: 1; padding: 0 20px; border-radius: 18px; border: 1px solid var(--border); background: var(--surface); color: var(--text-main); outline: none; font-size: 1rem; transition: border-color 0.3s; height: 55px; }
         input#userInput:focus { border-color: var(--primary); background: var(--surface-elevated); }
-
         .btn-send { width: 55px; height: 55px; border-radius: 18px; border: none; background: var(--primary-gradient); color: white; font-size: 1.2rem; cursor: pointer; transition: 0.2s; display: flex; justify-content: center; align-items: center; }
         .btn-send:active { transform: scale(0.95); }
+        
+        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); } 70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
 
     </style>
 </head>
@@ -130,31 +187,78 @@
         </div>
     </div>
 
-    <div class="main-view" id="mainView">
+    <div class="view" id="homeView">
         <div id="chatSection" class="chat-container">
-            <div class="message ai">Hello! I am <b>Appu</b>, your local S8 EEE Assistant. Connect 📡 <b>Bluetooth</b> to begin navigating!</div>
+            <div class="message ai">Hello! I am <b>Appu</b>. Connect 📡 <b>Bluetooth</b> to begin navigating!</div>
+        </div>
+        
+        <div class="saved-paths-container">
+            <div class="saved-paths-header">Saved Routes</div>
+            <div id="savedPathsList"></div>
+        </div>
+    </div>
+
+    <div class="view hidden" id="settingsView">
+        <div class="settings-container">
+            
+            <div class="page-title">
+                <button class="btn-back" onclick="switchView('home')">←</button>
+                <span>Manual Control & Recording</span>
+            </div>
+            
+            <div class="record-panel" id="recordPanel">
+                <div class="record-status">
+                    <span class="record-dot"></span>
+                    <span id="recordText">Ready to record sequence</span>
+                </div>
+                <button class="btn-record" id="recordBtn" onclick="toggleRecording()">⏺ Start Recording</button>
+                <button class="btn-save" id="saveBtn" onclick="saveRecording()">💾 Save Path</button>
+            </div>
+
+            <div class="joystick-wrapper">
+                <div class="joystick-grid" oncontextmenu="event.preventDefault();">
+                    <button id="btnUp" class="joy-btn joy-up" 
+                        onpointerdown="startMove('F', this)" onpointerup="stopMove(this)" onpointerleave="stopMove(this)" onpointercancel="stopMove(this)">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+                    </button>
+                    
+                    <button id="btnLeft" class="joy-btn joy-left" 
+                        onpointerdown="startMove('L', this)" onpointerup="stopMove(this)" onpointerleave="stopMove(this)" onpointercancel="stopMove(this)">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                    </button>
+                    
+                    <button id="btnStop" class="joy-btn joy-stop" 
+                        onpointerdown="startMove('S', this)" onpointerup="stopMove(this)" onpointerleave="stopMove(this)" onpointercancel="stopMove(this)">🛑</button>
+                    
+                    <button id="btnRight" class="joy-btn joy-right" 
+                        onpointerdown="startMove('R', this)" onpointerup="stopMove(this)" onpointerleave="stopMove(this)" onpointercancel="stopMove(this)">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                    </button>
+                    
+                    <button id="btnDown" class="joy-btn joy-down" 
+                        onpointerdown="startMove('B', this)" onpointerup="stopMove(this)" onpointerleave="stopMove(this)" onpointercancel="stopMove(this)">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="keyboard-hint">
+                Desktop users: Use <b>W, A, S, D</b> or <b>Arrow Keys</b> to drive.<br>Press <b>Spacebar</b> to stop.
+            </div>
         </div>
     </div>
 
     <div class="footer">
         <div class="controls-wrapper">
-            
-            <div class="quick-nav">
-                <button class="nav-pill" onclick="handleButtonCmd('Lift', 'L')"><span>🛗</span> Lift</button>
-                <button class="nav-pill" onclick="handleButtonCmd('Office', 'F')"><span>🏢</span> Office</button>
-                <button class="nav-pill" onclick="handleButtonCmd('Principal', 'R')"><span>👨‍🏫</span> Principal</button>
-                <button class="nav-pill" onclick="handleButtonCmd('Admissions', 'B')"><span>📝</span> Admissions</button>
-                <button class="nav-pill" onclick="handleButtonCmd('Stop', 'S')"><span>🛑</span> Stop</button>
-            </div>
-
+            <div class="quick-nav" id="quickNav"></div>
             <div class="main-actions">
-                <button class="btn-icon" onclick="connectRobot()" title="Connect Bluetooth">📡</button>
+                <button class="btn-icon" onclick="connectRobot()" title="Connect">📡</button>
                 <button class="btn-mic" id="micBtn" onclick="toggleMic()">
-                    <span id="micIcon" style="font-size: 1.2rem;">🎤</span> <span id="micLabel">Tap to Speak</span>
+                    <span id="micIcon" style="font-size: 1.2rem;">🎤</span> <span id="micLabel">Speak</span>
                 </button>
-                <button class="btn-icon" onclick="toggleKeyboard()" title="Type Message">⌨️</button>
+                <button class="btn-icon" id="kbdBtn" onclick="toggleKeyboard()" title="Type Message">⌨️</button>
+                <button class="btn-icon" id="settingsBtn" onclick="switchView('settings')" title="Settings">⚙️</button>
             </div>
-            
             <div class="input-bar" id="inputBar">
                 <input type="text" id="userInput" placeholder="Type a destination..." onkeypress="if(event.key==='Enter') processInput(this.value)">
                 <button class="btn-send" onclick="processInput(document.getElementById('userInput').value)">📤</button>
@@ -163,6 +267,7 @@
     </div>
 
     <script>
+        // --- Globals & Setup ---
         const SERVICE_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
         const CHARACTERISTIC_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
         let bleChar;
@@ -170,20 +275,8 @@
         let recognition;
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-        function toggleKeyboard() {
-            const bar = document.getElementById('inputBar');
-            bar.classList.toggle('active');
-            if(bar.classList.contains('active')) {
-                setTimeout(() => document.getElementById('userInput').focus(), 100);
-            }
-        }
-
+        // --- Hardware / Bluetooth ---
         async function connectRobot() {
-            if (!window.isSecureContext) {
-                addMessage("⚠️ Bluetooth requires an HTTPS connection. Host this on GitHub Pages.", false);
-                return;
-            }
-
             try {
                 const device = await navigator.bluetooth.requestDevice({ filters: [{ services: [SERVICE_UUID] }] });
                 const server = await device.gatt.connect();
@@ -192,103 +285,132 @@
                 
                 document.getElementById('btStatus').className = "status-pill online";
                 document.getElementById('btText').innerText = "Robot Connected";
-                addMessage("Hardware synced. Awaiting navigation commands.", false);
-            } catch (e) { 
-                console.error(e); 
-                if(e.name !== "NotFoundError") {
-                    addMessage("Bluetooth connection failed: " + e.message, false);
+                
+                if(!document.getElementById('homeView').classList.contains('hidden')) {
+                    addMessage("Hardware synced. Awaiting navigation commands.", false);
                 }
-            }
+            } catch (e) { console.error(e); }
         }
 
         function sendCmd(char) {
             if(bleChar) bleChar.writeValue(new TextEncoder().encode(char));
-            console.log("Hardware Command Sent: " + char);
+            console.log("Hardware Sent: " + char);
+
+            if (isRecording) {
+                const now = Date.now();
+                const delay = now - lastCmdTime;
+                // Log the action AND how long we waited since the last event
+                currentRecording.push({ cmd: char, delay: delay });
+                lastCmdTime = now;
+                
+                // Only count the non-stop commands as "steps" to keep the UI clean
+                if(char !== 'S') {
+                    document.getElementById('recordText').innerText = `Recorded ${Math.floor(currentRecording.length / 2)} moves...`;
+                }
+            }
         }
 
-        // --- Local Navigation Logic ---
+        // --- Joystick & Keyboard Controls ---
+        let currentCommand = null;
+
+        // Mouse & Touch
+        function startMove(cmd, btnElem) {
+            if (currentCommand === cmd) return; // Prevent spamming if already moving
+            currentCommand = cmd;
+            sendCmd(cmd);
+            btnElem.classList.add('pressed');
+        }
+
+        function stopMove(btnElem) {
+            if (currentCommand === null) return;
+            currentCommand = null;
+            sendCmd('S');
+            btnElem.classList.remove('pressed');
+        }
+
+        // Keyboard
+        let activeKeyCmd = null;
         
-        function handleButtonCmd(locationName, cmdChar) {
-            addMessage(`Take me to the ${locationName}`, true);
-            executeNavigation(locationName, cmdChar);
-        }
+        window.addEventListener('keydown', (e) => {
+            if(document.getElementById('settingsView').classList.contains('hidden')) return; // Only active in settings
+            if(e.target.tagName === 'INPUT') return; // Ignore if typing
+            if(e.repeat) return; // Prevent OS key hold repeat spam
 
-        function executeNavigation(locationName, cmdChar) {
-            sendCmd(cmdChar);
-            if (cmdChar === 'S') {
-                addMessage("Stopping.", false);
+            let cmd = null;
+            let btnId = null;
+
+            switch(e.key.toLowerCase()) {
+                case 'w': case 'arrowup': cmd = 'F'; btnId = 'btnUp'; break;
+                case 'a': case 'arrowleft': cmd = 'L'; btnId = 'btnLeft'; break;
+                case 's': case 'arrowdown': cmd = 'B'; btnId = 'btnDown'; break;
+                case 'd': case 'arrowright': cmd = 'R'; btnId = 'btnRight'; break;
+                case ' ': cmd = 'S'; btnId = 'btnStop'; break; // Spacebar to emergency stop
+            }
+
+            if (cmd && activeKeyCmd !== cmd) {
+                activeKeyCmd = cmd;
+                startMove(cmd, document.getElementById(btnId));
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if(document.getElementById('settingsView').classList.contains('hidden')) return;
+
+            let cmd = null;
+            let btnId = null;
+
+            switch(e.key.toLowerCase()) {
+                case 'w': case 'arrowup': cmd = 'F'; btnId = 'btnUp'; break;
+                case 'a': case 'arrowleft': cmd = 'L'; btnId = 'btnLeft'; break;
+                case 's': case 'arrowdown': cmd = 'B'; btnId = 'btnDown'; break;
+                case 'd': case 'arrowright': cmd = 'R'; btnId = 'btnRight'; break;
+                case ' ': cmd = 'S'; btnId = 'btnStop'; break;
+            }
+
+            if (cmd && activeKeyCmd === cmd) {
+                activeKeyCmd = null;
+                stopMove(document.getElementById(btnId));
+            } else if (cmd) {
+                // Failsafe visual cleanup
+                document.getElementById(btnId).classList.remove('pressed');
+            }
+        });
+
+
+        // --- View Switching (SPA) ---
+        function switchView(viewName) {
+            const homeView = document.getElementById('homeView');
+            const settingsView = document.getElementById('settingsView');
+            const quickNav = document.getElementById('quickNav');
+            const settingsBtn = document.getElementById('settingsBtn');
+
+            if (viewName === 'settings') {
+                homeView.classList.add('hidden');
+                settingsView.classList.remove('hidden');
+                quickNav.style.display = 'none';
+                settingsBtn.style.background = 'var(--primary)';
+                document.getElementById('inputBar').classList.remove('active');
             } else {
-                addMessage(`Going to the ${locationName}.`, false);
+                settingsView.classList.add('hidden');
+                homeView.classList.remove('hidden');
+                quickNav.style.display = 'flex';
+                settingsBtn.style.background = 'var(--surface)';
+                updateDynamicUI();
+                setTimeout(scrollToBottom, 100);
             }
         }
 
-        // Basic parser for typed/spoken text
-        function processInput(text) {
-            if (!text.trim()) return;
-            
-            addMessage(text, true);
-            document.getElementById('userInput').value = '';
-            document.getElementById('inputBar').classList.remove('active');
-            scrollToBottom();
-
-            const lowerText = text.toLowerCase();
-            
-            // Simple keyword matching
-            if (lowerText.includes('lift')) {
-                executeNavigation('Lift', 'L');
-            } 
-            else if (lowerText.includes('office')) {
-                executeNavigation('Office', 'F');
-            } 
-            else if (lowerText.includes('principal')) {
-                executeNavigation('Principal', 'R');
-            } 
-            else if (lowerText.includes('admission')) {
-                executeNavigation('Admissions', 'B');
-            } 
-            else if (lowerText.includes('stop')) {
-                executeNavigation('Stop', 'S');
-            } 
-            else {
-                addMessage("I didn't recognize that destination. Please specify Lift, Office, Principal, Admissions, or Stop.", false);
-            }
-        }
-
-        // --- UI & Utilities ---
-
-        function addMessage(text, isUser) {
-            const div = document.createElement('div');
-            div.className = `message ${isUser ? 'user' : 'ai'}`;
-            div.innerHTML = text;
-            document.getElementById('chatSection').appendChild(div);
-            scrollToBottom();
-            if(!isUser) speak(text);
-        }
-
-        function scrollToBottom() {
-            const view = document.getElementById('mainView');
-            view.scrollTop = view.scrollHeight;
-        }
-
+        // --- TTS & Microphone ---
         function speak(text) {
             window.speechSynthesis.cancel();
             const u = new SpeechSynthesisUtterance(text);
             u.lang = 'en-IN';
             u.rate = 0.95;
-            u.pitch = 1.0;
             window.speechSynthesis.speak(u);
         }
 
         function toggleMic() {
-            if (!window.isSecureContext) {
-                alert("Mobile Warning: The Microphone requires an HTTPS connection to work.");
-                return;
-            }
-            if (!SpeechRecognition) {
-                alert("Speech Recognition is not supported in this browser.");
-                return;
-            }
-
+            if (!SpeechRecognition) return alert("Speech Recognition not supported.");
             const btn = document.getElementById('micBtn');
             const label = document.getElementById('micLabel');
 
@@ -300,7 +422,6 @@
             recognition = new SpeechRecognition();
             recognition.lang = 'en-IN'; 
             recognition.continuous = false;
-            recognition.interimResults = false;
 
             recognition.onstart = () => {
                 isListening = true;
@@ -311,28 +432,184 @@
 
             recognition.onresult = (e) => {
                 const transcript = e.results[0][0].transcript;
-                processInput(transcript); 
+                if(!document.getElementById('homeView').classList.contains('hidden')) {
+                    processInput(transcript); 
+                }
             };
 
-            recognition.onerror = (event) => {
-                console.error("Speech Error:", event.error);
+            recognition.onend = recognition.onerror = () => {
                 isListening = false;
                 btn.classList.remove('listening');
-                label.innerText = "Tap to Speak";
+                label.innerText = "Speak";
             };
 
-            recognition.onend = () => {
-                isListening = false;
-                btn.classList.remove('listening');
-                label.innerText = "Tap to Speak";
-            };
+            try { recognition.start(); } catch(e) { console.error(e); }
+        }
 
-            try {
-                recognition.start();
-            } catch (e) {
-                console.error("Mic start error:", e);
+        function toggleKeyboard() {
+            if(document.getElementById('homeView').classList.contains('hidden')) {
+                switchView('home');
+            }
+            const bar = document.getElementById('inputBar');
+            bar.classList.toggle('active');
+            if(bar.classList.contains('active')) {
+                setTimeout(() => document.getElementById('userInput').focus(), 100);
+            }
+            scrollToBottom();
+        }
+
+        // --- Chat UI & Input Parsing ---
+        function scrollToBottom() {
+            const view = document.getElementById('homeView');
+            view.scrollTop = view.scrollHeight;
+        }
+
+        function addMessage(text, isUser) {
+            const div = document.createElement('div');
+            div.className = `message ${isUser ? 'user' : 'ai'}`;
+            div.innerHTML = text;
+            document.getElementById('chatSection').appendChild(div);
+            scrollToBottom();
+            if(!isUser) speak(text.replace(/<[^>]*>?/gm, '')); 
+        }
+
+        function processInput(text) {
+            if (!text.trim()) return;
+            addMessage(text, true);
+            document.getElementById('userInput').value = '';
+            document.getElementById('inputBar').classList.remove('active');
+            scrollToBottom();
+
+            const lowerText = text.toLowerCase();
+            if (lowerText.includes('stop')) {
+                sendCmd('S');
+                addMessage("Stopping.", false);
+                return;
+            }
+
+            const savedPaths = JSON.parse(localStorage.getItem('appuPaths') || '{}');
+            let matched = false;
+
+            for (const name of Object.keys(savedPaths)) {
+                if (lowerText.includes(name.toLowerCase())) {
+                    playPath(name, true); 
+                    matched = true;
+                    break;
+                }
+            }
+
+            if (!matched) {
+                addMessage("I didn't recognize that destination in your saved routes.", false);
             }
         }
+
+        // --- Recording Logic ---
+        let isRecording = false;
+        let currentRecording = [];
+        let lastCmdTime = 0;
+
+        function toggleRecording() {
+            const panel = document.getElementById('recordPanel');
+            const btn = document.getElementById('recordBtn');
+            const saveBtn = document.getElementById('saveBtn');
+
+            if (!isRecording) {
+                isRecording = true;
+                currentRecording = [];
+                lastCmdTime = Date.now();
+                panel.classList.add('is-recording');
+                btn.innerHTML = "⏹ Stop Recording";
+                saveBtn.style.display = 'none';
+                document.getElementById('recordText').innerText = "Recording... use joystick or keyboard";
+            } else {
+                isRecording = false;
+                panel.classList.remove('is-recording');
+                btn.innerHTML = "⏺ Start New Recording";
+                
+                // Only show save button if actual movements were made
+                if (currentRecording.length > 0) {
+                    saveBtn.style.display = 'block';
+                    document.getElementById('recordText').innerText = `Finished! Ready to save.`;
+                } else {
+                    document.getElementById('recordText').innerText = "Nothing recorded.";
+                }
+            }
+        }
+
+        function saveRecording() {
+            const pathName = prompt("Enter a name for this route (e.g., 'Class to Lab'):");
+            if (!pathName) return;
+
+            let savedPaths = JSON.parse(localStorage.getItem('appuPaths') || '{}');
+            savedPaths[pathName] = currentRecording;
+            localStorage.setItem('appuPaths', JSON.stringify(savedPaths));
+
+            alert("Route saved successfully!");
+            document.getElementById('saveBtn').style.display = 'none';
+            document.getElementById('recordText').innerText = "Ready to record sequence";
+            currentRecording = [];
+            
+            switchView('home');
+        }
+
+        // --- Dynamic UI Population ---
+        function updateDynamicUI() {
+            const savedPaths = JSON.parse(localStorage.getItem('appuPaths') || '{}');
+            const list = document.getElementById('savedPathsList');
+            list.innerHTML = '';
+            
+            if (Object.keys(savedPaths).length === 0) {
+                list.innerHTML = '<p style="color: var(--text-muted); font-size: 0.85rem;">No saved routes yet. Open Settings (⚙️) to record one.</p>';
+            } else {
+                for (const [name, pathData] of Object.entries(savedPaths)) {
+                    const totalTimeMs = pathData.reduce((sum, step) => sum + step.delay, 0);
+                    const totalTimeSec = (totalTimeMs / 1000).toFixed(1);
+                    // Divide length by 2 because each press has a matching 'Stop' release event
+                    const moveCount = Math.floor(pathData.length / 2);
+
+                    const card = document.createElement('div');
+                    card.className = 'path-card';
+                    card.innerHTML = `
+                        <div class="path-info">
+                            <h4>${name}</h4>
+                            <p>${moveCount} movements • ~${totalTimeSec}s duration</p>
+                        </div>
+                        <button class="play-btn" onclick="playPath('${name}')" title="Play Route">▶️</button>
+                    `;
+                    list.appendChild(card);
+                }
+            }
+
+            const quickNav = document.getElementById('quickNav');
+            quickNav.innerHTML = `<button class="nav-pill danger" onclick="sendCmd('S'); addMessage('Emergency Stop Activated', true);"><span>🛑</span> Stop</button>`;
+            
+            for (const name of Object.keys(savedPaths)) {
+                quickNav.innerHTML += `<button class="nav-pill" onclick="playPath('${name}')"><span>🛤️</span> ${name}</button>`;
+            }
+        }
+
+        async function playPath(name, skipUserMsg = false) {
+            const savedPaths = JSON.parse(localStorage.getItem('appuPaths') || '{}');
+            const pathData = savedPaths[name];
+            if (!pathData) return;
+
+            if (!skipUserMsg) addMessage(`Take me to ${name}`, true);
+            addMessage(`Replaying route: <b>${name}</b>. Navigating now...`, false);
+
+            for (let i = 0; i < pathData.length; i++) {
+                const step = pathData[i];
+                // Wait for the exact time gap that occurred between the original button presses
+                await new Promise(resolve => setTimeout(resolve, step.delay));
+                sendCmd(step.cmd);
+            }
+            
+            // Failsafe to ensure it stops at the end of a recording
+            sendCmd('S');
+            addMessage(`Arrived at destination: ${name}`, false);
+        }
+
+        // Initialize UI on load
+        updateDynamicUI();
     </script>
 </body>
 </html>
